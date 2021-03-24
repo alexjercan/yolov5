@@ -304,6 +304,11 @@ class LoadWebcam:  # for inference
 
 class LoadStreams:  # multiple IP or RTSP cameras
     def __init__(self, sources='streams.txt', img_size=640, stride=32, layers=[L_RGB]):
+        assert L_RGB in layers, "Webcam mode is supported only for rgb"
+        if layers != [L_RGB]:
+            logger.warning(f"Using blank images for non rgb layers {layers}")
+        self.used_layers = layers
+        
         self.mode = 'stream'
         self.img_size = img_size
         self.stride = stride
@@ -356,22 +361,33 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
     def __next__(self):
         self.count += 1
-        img0 = self.imgs.copy()
+        layers0 = {L_RGB: self.imgs.copy()}
+        if L_DEPTH in self.used_layers:
+            layers0[L_DEPTH] = [np.zeros_like(layers0[L_RGB][0])] * len(layers0[L_RGB])
+        if L_NORMAL in self.used_layers:
+            layers0[L_NORMAL] = [np.zeros_like(layers0[L_RGB][0])] * len(layers0[L_RGB])
         if cv2.waitKey(1) == ord('q'):  # q to quit
             cv2.destroyAllWindows()
             raise StopIteration
 
         # Letterbox
-        img = [letterbox(x, self.img_size, auto=self.rect, stride=self.stride)[0] for x in img0]
+        assert layers0, f"Cannot load images for layers: {self.used_layers}"
+        layers = {k: [letterbox(layer0, self.img_size, stride=self.stride)[0] for layer0 in layers0[k]] for k in layers0 }
 
         # Stack
-        img = np.stack(img, 0)
+        layers = {k: np.stack(layers[k], 0) for k in layers}
 
         # Convert
-        img = img[:, :, :, ::-1].transpose(0, 3, 1, 2)  # BGR to RGB, to bsx3x416x416
-        img = np.ascontiguousarray(img)
+        if L_RGB in layers:
+            layers[L_RGB] = layers[L_RGB][:, :, :, ::-1] # to RGB
+        layers = {k: layers[k].transpose(0, 3, 1, 2) for k in layers}
+        img0s = layers0[L_RGB]
+        layers = [layers[k] for k in self.used_layers]
+        layers = np.concatenate(layers, axis=1)
 
-        return self.sources, img, img0, None
+        layers = np.ascontiguousarray(layers)
+
+        return self.sources, layers, img0s, None
 
     def __len__(self):
         return 0  # 1E12 frames = 32 streams at 30 FPS for 30 years
