@@ -174,11 +174,13 @@ class LoadImages:  # for inference
     def __next__(self):
         if self.count == self.nf:
             raise StopIteration
+        path = self.files[self.count]
+        layers0 = {}
 
-        if self.video_flag[self.count]:
+        if L_RGB in self.used_layers and self.video_flag[self.count]:
             # Read video
             self.mode = 'video'
-            ret_val, img0 = self.cap.read()
+            ret_val, layers0[L_RGB] = self.cap.read()
             if not ret_val:
                 self.count += 1
                 self.cap.release()
@@ -187,35 +189,38 @@ class LoadImages:  # for inference
                 else:
                     path = self.files[self.count]
                     self.new_video(path)
-                    ret_val, img0 = self.cap.read()
+                    ret_val, layers0[L_RGB] = self.cap.read()
+
+            # TODO: add support for depth and normal for videos
+            layers0[L_DEPTH] = copy(layers0[L_RGB])
+            layers0[L_NORMAL] = copy(layers0[L_RGB])
 
             self.frame += 1
             print(f'video {self.count + 1}/{self.nf} ({self.frame}/{self.nframes}) {path}: ', end='')
 
         else:
-            
-            layers0 = {}
+            # Read layer images
             if L_RGB in self.used_layers:
-                path = self.layer_files[L_RGB][self.count]
-                x = cv2.imread(path)
-                assert x is not None, 'Image Not Found ' + path
+                lpath = self.layer_files[L_RGB][self.count]
+                x = cv2.imread(lpath)
+                assert x is not None, 'Image Not Found ' + lpath
                 layers0[L_RGB] = x
             if L_DEPTH in self.used_layers:
-                path = self.layer_files[L_DEPTH][self.count]
-                x = exr2depth(path)
-                assert x is not None, 'Image Not Found ' + path
+                lpath = self.layer_files[L_DEPTH][self.count]
+                x = exr2depth(lpath)
+                assert x is not None, 'Image Not Found ' + lpath
                 layers0[L_DEPTH] = x
             if L_NORMAL in self.used_layers:
-                path = self.layer_files[L_NORMAL][self.count]
-                x = exr2normal(path)
-                assert x is not None, 'Image Not Found ' + path
+                lpath = self.layer_files[L_NORMAL][self.count]
+                x = exr2normal(lpath)
+                assert x is not None, 'Image Not Found ' + lpath
                 layers0[L_NORMAL] = x
 
-            path = self.files[self.count]
             self.count += 1            
             print(f'image {self.count}/{self.nf} {path}: ', end='')
 
         # Padded resize
+        assert layers0, f"Cannot load images for layers: {self.used_layers}"
         layers = {k: letterbox(layers0[k], self.img_size, stride=self.stride)[0] for k in layers0}
 
         # Convert
