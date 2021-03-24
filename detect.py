@@ -31,6 +31,8 @@ def detect(save_img=False):
 
     # Load model
     model = attempt_load(weights, map_location=device)  # load FP32 model
+    used_layers = model.used_layers
+    print(used_layers)
     stride = int(model.stride.max())  # model stride
     imgsz = check_img_size(imgsz, s=stride)  # check img_size
     if half:
@@ -47,10 +49,10 @@ def detect(save_img=False):
     if webcam:
         view_img = check_imshow()
         cudnn.benchmark = True  # set True to speed up constant image size inference
-        dataset = LoadStreams(source, img_size=imgsz, stride=stride)
+        dataset = LoadStreams(source, img_size=imgsz, stride=stride, layers=used_layers)
     else:
         save_img = True
-        dataset = LoadImages(source, img_size=imgsz, stride=stride)
+        dataset = LoadImages(source, img_size=imgsz, stride=stride, layers=used_layers)
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names

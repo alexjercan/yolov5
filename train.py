@@ -100,6 +100,7 @@ def train(hyp, opt, device, tb_writer=None):
         logger.info('Transferred %g/%g items from %s' % (len(state_dict), len(model.state_dict()), weights))  # report
     else:
         model = Model(opt.cfg, ch=num_in_channels, nc=nc, anchors=hyp.get('anchors')).to(device)  # create
+    model.used_layers = used_layers
 
     # Freeze
     freeze = []  # parameter names to freeze (full or partial)
