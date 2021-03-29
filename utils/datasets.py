@@ -36,7 +36,7 @@ L_DEPTH = 'depth'
 L_NORMAL = 'normal'
 
 
-def num_channles(layers):
+def num_channels(layers):
     # Get the number of channels based on a layer format
     # e.g (L_RGB, L_DEPTH, L_NORMAL)
     nc = {L_RGB: 3, L_DEPTH: 3, L_NORMAL: 3}

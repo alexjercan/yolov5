@@ -25,7 +25,7 @@ import test  # import test.py to get mAP after each epoch
 from models.experimental import attempt_load
 from models.yolo import Model
 from utils.autoanchor import check_anchors
-from utils.datasets import create_dataloader, num_channles
+from utils.datasets import create_dataloader, num_channels
 from utils.general import labels_to_class_weights, increment_path, labels_to_image_weights, init_seeds, \
     fitness, strip_optimizer, get_latest_run, check_dataset, check_file, check_git_status, check_img_size, \
     check_requirements, print_mutation, set_logging, one_cycle, colorstr
@@ -84,7 +84,7 @@ def train(hyp, opt, device, tb_writer=None):
     train_path = data_dict['train']
     test_path = data_dict['val']
     used_layers = data_dict['layers']
-    num_in_channels = num_channles(used_layers)
+    num_in_channels = num_channels(used_layers)
 
     # Model
     pretrained = weights.endswith('.pt')

@@ -10,7 +10,7 @@ import yaml
 from tqdm import tqdm
 
 from models.experimental import attempt_load
-from utils.datasets import create_dataloader, num_channles
+from utils.datasets import create_dataloader, num_channels
 from utils.general import coco80_to_coco91_class, check_dataset, check_file, check_img_size, check_requirements, \
     box_iou, non_max_suppression, scale_coords, xyxy2xywh, xywh2xyxy, set_logging, increment_path, colorstr
 from utils.metrics import ap_per_class, ConfusionMatrix
@@ -76,7 +76,7 @@ def test(data,
     nc = 1 if single_cls else int(data['nc'])  # number of classes
     used_layers = data['layers']
     assert model.used_layers == used_layers, f"Incompatible weights {model.used_layers} and dataset {used_layers}" 
-    num_in_channels = num_channles(used_layers)
+    num_in_channels = num_channels(used_layers)
     iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
     niou = iouv.numel()
 
