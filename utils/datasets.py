@@ -509,7 +509,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 self.layers[i], self.img_hw0[i], self.img_hw[i] = x  # img, hw_original, hw_resized = load_image(self, i)
                 gb += sum([img.nbytes for img in self.layers[i].values()])
                 pbar.desc = f'{prefix}Caching images ({gb / 1E9:.1f}GB)'
-
+            pbar.close()
+            
     def cache_labels(self, path=Path('./labels.cache'), prefix=''):
         # Cache dataset labels, check images and read shapes
         x = {}  # dict
@@ -556,7 +557,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
 
             pbar.desc = f"{prefix}Scanning '{path.parent / path.stem}' images and labels... " \
                         f"{nf} found, {nm} missing, {ne} empty, {nc} corrupted"
-
+        pbar.close()
+            
         if nf == 0:
             print(f'{prefix}WARNING: No labels found in {path}. See {help_url}')
 
