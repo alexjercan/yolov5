@@ -225,9 +225,6 @@ class NMS(nn.Module):
 
 class autoShape(nn.Module):
     # input-robust model wrapper for passing cv2/np/PIL/torch inputs. Includes preprocessing, inference and NMS
-    conf = 0.25  # NMS confidence threshold
-    iou = 0.45  # NMS IoU threshold
-    classes = None  # (optional list) filter by class
 
     def __init__(self, model):
         super(autoShape, self).__init__()
@@ -238,7 +235,7 @@ class autoShape(nn.Module):
         return self
 
     @torch.no_grad()
-    def forward(self, imgs, size=640, augment=False, profile=False):
+    def forward(self, imgs, size=640, augment=False, profile=False, conf=0.25, iou=0.45, classes=None):
         # Inference from various sources. For height=640, width=1280, RGB images example inputs are:
         #   filename:   imgs = 'data/images/zidane.jpg'
         #   URI:             = 'https://github.com/ultralytics/yolov5/releases/download/v1.0/zidane.jpg'
@@ -284,7 +281,7 @@ class autoShape(nn.Module):
             t.append(time_synchronized())
 
             # Post-process
-            y = non_max_suppression(y, conf_thres=self.conf, iou_thres=self.iou, classes=self.classes)  # NMS
+            y = non_max_suppression(y, conf_thres=conf, iou_thres=iou, classes=classes)  # NMS
             for i in range(n):
                 scale_coords(shape1, y[i][:, :4], shape0[i])
 
