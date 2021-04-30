@@ -571,8 +571,11 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         x['hash'] = get_hash(self.label_files + self.img_files)
         x['results'] = nf, nm, ne, nc, i + 1
         x['version'] = 0.1  # cache version
-        torch.save(x, path)  # save for next time
-        logging.info(f'{prefix}New cache created: {path}')
+        try:
+            torch.save(x, path)  # save for next time
+            logging.info(f'{prefix}New cache created: {path}')
+        except Exception as e:
+            logging.info(f'{prefix}WARNING: Cache directory {path.parent} is not writeable: {e}')  # path not writeable
         return x
 
     def __len__(self):
@@ -733,8 +736,8 @@ def load_image(self, index):
     img = cv2.imread(path)  # BGR
     assert img is not None, 'Image Not Found ' + path
     h0, w0 = img.shape[:2]  # orig hw
-    r = self.img_size / max(h0, w0)  # resize image to img_size
-    if r != 1:  # always resize down, only resize up if training with augmentation
+    r = self.img_size / max(h0, w0)  # ratio
+    if r != 1:  # if sizes are not equal
         interp = cv2.INTER_AREA if r < 1 and not self.augment else cv2.INTER_LINEAR
         img = cv2.resize(img, (int(w0 * r), int(h0 * r)), interpolation=interp)
     return img, (h0, w0), img.shape[:2]  # img, hw_original, hw_resized
